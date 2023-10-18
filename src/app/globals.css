@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+#recommendations-priority {
+    @layer components {
+        .btn:is(input[type="radio"]):checked {
+            @apply btn-accent;
+        }
+    }
+}

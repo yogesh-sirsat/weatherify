@@ -1,0 +1,37 @@
+services:
+  app:
+    image: nextjs
+    build:
+      context: ./
+      target: dev
+      dockerfile: Dockerfile
+    container_name: Weatherify-App
+    env_file:
+      - .env.local
+      - .env.development
+    volumes:
+        - .:/app
+        - /app/node_modules
+        - /app/.next
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - Weatherify-Network
+
+  webserver:
+    image: nginx:stable-alpine
+    container_name: Weatherify-Webserver
+    volumes:
+      - ./nginx-dev:/etc/nginx/conf.d
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - app
+    networks:
+      - Weatherify-Network
+
+networks:
+  Weatherify-Network:

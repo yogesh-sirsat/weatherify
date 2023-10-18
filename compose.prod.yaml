@@ -1,0 +1,44 @@
+services:
+  app:
+    image: weatherify-app
+    build:
+      context: ./
+      dockerfile: prod.Dockerfile
+    container_name: Weatherify-App
+    env_file:
+      - .env.local
+      - .env.production
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - Weatherify-Network
+
+  # webserver:
+  #   image: nginx:stable-alpine
+  #   container_name: Weatherify-Webserver-Prod
+  #   volumes:
+  #     - ./nginx-prod:/etc/nginx/conf.d
+  #     # - ./certbot/conf:/etc/letsencrypt
+  #     # - ./certbot/www:/var/www/certbot
+  #   restart: unless-stopped
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - Weatherify-Network
+
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - ./certbot/conf:/etc/letsencrypt
+  #     - ./certbot/www:/var/www/certbot
+  #   command: certonly --webroot -w /var/www/certbot --force-renewal --email yogeshsirsat09@gmail.com -d weatherify.live -d www.weatherify.live --agree-tos
+  #   networks:
+  #     - Weatherify-Network
+
+networks:
+  Weatherify-Network:
