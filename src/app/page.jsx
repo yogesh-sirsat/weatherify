@@ -142,7 +142,7 @@ export default function Home() {
       </a>`;
       manageAlerts(
         setSuccess,
-        `Playlist created successfully! ${spotify_link_elem}`,
+        `<h4>Playlist created successfully!</h4> ${spotify_link_elem}`,
         10000
       );
     } catch (error) {
@@ -169,22 +169,24 @@ export default function Home() {
         createPlaylist={createPlaylist}
         isProcessing={isProcessing}
       />
-      <section className="p-2 relative flex flex-col justify-center items-center gap-4" >
+      <div className="flex items-center justify-center">
         {error ? (
           <Alert
-            type="error"
-            message={error}
-            relativeClasses="bg-error alert-error fixed mt-16 mx-4"
+          type="error"
+          message={error}
+          relativeClasses="bg-error alert-error fixed mt-16 mx-4"
           />
-        ) : null}
+          ) : null}
         {success ? (
           <Alert
-            type="success"
-            message={success}
-            relativeClasses="bg-success alert-success fixed mt-16 mx-4"
+          type="success"
+          message={success}
+          relativeClasses="bg-success alert-success fixed mt-16 mx-4"
           />
-        ) : null}
-        <section className={`${selectedTab === "weather x time" ? "flex" : "hidden"} flex-col justify-center items-center gap-4`}>
+          ) : null}
+        </div>
+      <section className="p-2 relative md:flex md:justify-center" >
+        <section className={`${selectedTab === "weather x time" ? "flex" : "hidden"} flex-col gap-4`}>
 
           <Weather
             setWeatherStatus={setWeatherStatus}

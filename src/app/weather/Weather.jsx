@@ -327,7 +327,7 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
   };
 
   return (
-    <section className="flex flex-col md:flex-row gap-4 mt-2">
+    <section className="flex flex-col md:flex-row gap-1 md:gap-2 mt-16 md:mt-0">
       {locationNotFound ? (
         <Alert type="warning" message={"Location not found, please check if your location is enabled!"} relativeClasses="bg-warning alert-warning fixed items-center flex-col mt-16 mx-4">         
           <div>
@@ -343,11 +343,11 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
           </div>
         </Alert>
       ) : (
-        <div className="stats stats-horizontal shadow-md w-full overflow-y-auto md:w-auto">
-          <div className="stat">
+        <div className="stats stats-horizontal shadow-md mt-2 md:mt-0 bg-base-200">
+          <div className="stat pr-0 gap-1">
             <div className="stat-figure">
               <div className="avatar">
-                <div className="w-24 rounded-full">
+                <div className="w-24 rounded-full bg-base-100">
                   <Image
                     src={getWeatherIconUrl(weatherData?.weather.icon)}
                     alt="weather_icon"
@@ -369,7 +369,7 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
               </span>
             </div>
             <div className="stat-value">{weatherData?.weather.main}</div>
-            <div className="stat-desc">{weatherData?.weather.description}</div>
+            <div className="stat-desc whitespace-normal">{weatherData?.weather.description}</div>
           </div>
 
           <div className="stat border-none">
@@ -387,13 +387,13 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
           </div>
         </div>
       )}
-      <div className="stats stats-horizontal shadow-md">
-        <div className="stat pt-0">
+      <div className="stats stats-horizontal shadow-md bg-base-200">
+        <div className="stat">
           <div className="stat-title">
             {localTimeString} - {weatherStatus?.time_period}
           </div>
           <div className="stat-value">{weatherStatusMessage?.head}</div>
-          <div className="stat-desc mt-2 break-words">
+          <div className="stat-desc whitespace-pre-line mt-2 break-words">
             {weatherStatusMessage?.body}
           </div>
         </div>

@@ -49,7 +49,7 @@ function Recommendations({
               relativeClasses="bg-warning alert-warning fixed mx-8 mt-20 inset-x-0"
             />
           ) : null}
-          <header className="sticky backdrop-blur-md bg-base-200 bg-opacity-50 top-0 p-4 flex flex-row gap-2 z-30">
+          <header className="sticky backdrop-blur-md bg-base-200 bg-opacity-50 top-0 p-2 md:p-4 flex flex-row gap-2 z-30">
             <button
               className="btn btn-ghost"
               onClick={() => setIsRecommendations(false)}
@@ -70,7 +70,7 @@ function Recommendations({
                 />
               </svg>
             </button>
-            <h1 className="text-xl md:text-2xl font-bold self-center">
+            <h1 className="text-lg md:text-2xl font-bold self-center">
               New Recommendations For You!
             </h1>
           </header>

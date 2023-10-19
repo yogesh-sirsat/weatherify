@@ -39,7 +39,7 @@ function Navbar({selectedTab, setSelectedTab}) {
 
   return (
     <>
-      <nav className="lg:hidden navbar bg-base-100 fixed top-0 inset-x-0 z-10 shadow-lg">
+      <nav className="lg:hidden navbar bg-base-100 fixed top-0 inset-x-0 z-10 shadow-md md:shadow-lg">
         <div className="flex-1">
           <a className="btn btn-ghost text-xl normal-case">Weatherify</a>
         </div>

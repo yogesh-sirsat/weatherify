@@ -26,7 +26,7 @@ function Alert({ type, message, relativeClasses, children }) {
       className={`flex flex-row gap-2 rounded-xl p-3 top-0 z-30 ${relativeClasses}`}
     >
       {svg}
-      <span dangerouslySetInnerHTML={{ __html: message }}></span>
+      <span className="flex flex-col md:flex-row md:gap-2" dangerouslySetInnerHTML={{ __html: message }}></span>
       {children}
     </div>
   );

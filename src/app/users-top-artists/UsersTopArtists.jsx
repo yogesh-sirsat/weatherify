@@ -27,8 +27,8 @@ function UsersTopArtists({ user_id, setIsLoading }) {
   }, [user_id]);
 
   return (
-    <main className="flex flex-col gap-2 bg-base-200 p-4 rounded-xl items-center shadow-md ">
-      <h1 className="text-4xl">Your Recent Top Artists</h1>
+    <main className="flex flex-col gap-2 bg-base-200 p-2 md:p-4 rounded-xl items-center shadow-md ">
+      <h1 className="text-3xl md:text-4xl">Your Recent Top Artists</h1>
       <section className="grid grid-cols-2 md:grid-cols-3 gap-2 place-items-center">
         {usersTopArtists?.length === 0 ?  (
           <div className="break-words bg-base-200 p-4 grid grid-cols-1 w-52 md:w-96 gap-2">
