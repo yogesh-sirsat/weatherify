@@ -1,0 +1,57 @@
+services:
+  app:
+    image: 641639050119.dkr.ecr.eu-central-1.amazonaws.com/weatherify:latest
+    container_name: Weatherify-App
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=weatherify.live,www.weatherify.live
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=weatherify.live,www.weatherify.live
+    networks:
+      - Weatherify-Network
+
+  webserver:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: Weatherify-Webserver
+    environment:
+      - ENABLE_IPV6=true
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - app
+    networks:
+      - Weatherify-Network
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    environment:
+      - DEFAULT_EMAIL=yogeshsirsat09@gmail.com
+    volumes_from:
+      - webserver
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - Weatherify-Network
+
+volumes:
+  conf:
+  vhost:
+  html:
+  certs:
+  acme:
+
+networks:
+  Weatherify-Network:
