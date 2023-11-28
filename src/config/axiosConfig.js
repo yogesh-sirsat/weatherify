@@ -16,5 +16,6 @@ const axiosSpotify = axios.create({
 
 export default instance;
 export {
-  axiosSpotify
+  axiosSpotify,
+  instance as axiosConfig
 };

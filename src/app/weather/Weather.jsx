@@ -327,7 +327,7 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
   };
 
   return (
-    <section className="flex flex-col md:flex-row gap-1 md:gap-2 mt-16 md:mt-0">
+    <section className="flex flex-col lg:flex-row gap-1 md:gap-2 mt-14 md:mt-16 xl:mt-0">
       {locationNotFound ? (
         <Alert type="warning" message={"Location not found, please check if your location is enabled!"} relativeClasses="bg-warning alert-warning fixed items-center flex-col mt-16 mx-4">         
           <div>
@@ -343,8 +343,8 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
           </div>
         </Alert>
       ) : (
-        <div className="stats stats-horizontal shadow-md mt-2 md:mt-0 bg-base-200">
-          <div className="stat pr-0 gap-1">
+        <div className="stats stats-horizontal shadow-md mt-2 md:mt-0 bg-base-200 overflow-auto">
+          <div className="stat pr-0 gap-1 pl-3 sm:pl-6">
             <div className="stat-figure">
               <div className="avatar">
                 <div className="w-24 rounded-full bg-base-100">
@@ -388,7 +388,7 @@ function Weather({ setWeatherStatus, weatherStatus, setError }) {
         </div>
       )}
       <div className="stats stats-horizontal shadow-md bg-base-200">
-        <div className="stat">
+        <div className="stat pl-3 sm:pl-6">
           <div className="stat-title">
             {localTimeString} - {weatherStatus?.time_period}
           </div>

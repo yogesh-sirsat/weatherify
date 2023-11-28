@@ -64,7 +64,7 @@ function Genres({ selectedGenres, setSelectedGenres }) {
         <div>
           <h2 className="text-xl font-bold text-accent">Genres(max 5): {selectedGenres.size}</h2>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {genres.map((genre, id) => (
             <button
               className="btn btn-accent btn-xs btn-outline rounded-full"

@@ -29,7 +29,7 @@ function Recommendations({
   return (
     <main
       className={
-        " fixed overflow-hidden z-10 bg-neutral bg-opacity-30 inset-0 transform ease-in-out " +
+        " fixed overflow-hidden z-20 bg-neutral bg-opacity-30 inset-0 transform ease-in-out " +
         (isRecommendations
           ? " transition-opacity opacity-100 duration-500 translate-x-0"
           : " transition-all delay-500 opacity-0 translate-x-full")

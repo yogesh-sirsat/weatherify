@@ -1,10 +1,20 @@
 import Image from "next/image";
-function SideNav({ user, handleDisconnect, isHamburger, selectedTab, setSelectedTab }) {
+import Cookies from "js-cookie";
+
+function SideNav({ user, isHamburger, selectedTab, setSelectedTab }) {
+
+  const handleDisconnect = () => {
+    Cookies.remove("user_id");
+    Cookies.remove("access_token");
+    Cookies.remove("refresh_token");
+    window.location.href = "/signin";
+  };
+
   return (
     <aside
       className={`${
-        isHamburger ? "hidden lg:flex" : "flex"
-      }  flex-col fixed w-64 h-full px-4 py-8 overflow-y-auto bg-base-200 z-10 shadow-xl duration-500 ease-in-out`}
+        isHamburger ? "hidden xl:flex" : "flex"
+      }  flex-col w-64 fixed xl:sticky h-screen px-4 py-8 bg-base-200 z-10 shadow-xl duration-500 ease-in-out`}
     >
       <h1 className="btn btn-ghost mx-auto text-2xl normal-case flex items-center">
         Weatherify
@@ -43,13 +53,10 @@ function SideNav({ user, handleDisconnect, isHamburger, selectedTab, setSelected
           </ul>
         </nav>
       </div>
-      <footer className="absolute bottom-0 mb-4">
-        <div className="divider"></div>
-        <ul className="menu bg-base-100 flex flex-col gap-2 w-56 rounded-box">
-          <select data-choose-theme defaultValue={'DEFAULT'} className="select select-sm w-full max-w-s">
-            <option value={'DEFAULT'} disabled>
-              Pick The Color Theme!
-            </option>
+      <div className="divider"></div>
+      <footer>
+        <ul className="menu bg-base-100 flex flex-col gap-2 rounded-box w-full">
+          <select data-choose-theme defaultValue={'Pick The Color Theme!'} className="select select-sm">
             <option value="synthwave">Synthwave - Default</option>
             <option value="light">Light</option>
             <option value="dark">Dark</option>

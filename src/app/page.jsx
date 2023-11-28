@@ -1,11 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { axiosSpotify } from "@/config/axiosConfig";
-import { useEffect, useState, useRef } from "react";
+import { axiosSpotify, axiosConfig } from "@/config/axiosConfig";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import Navbar from "@/components/Navbar";
 import Genres from "@/components/Genres";
@@ -19,6 +16,7 @@ import Alert from "@/components/Alert";
 import manageAlerts from "@/utils/manageAlerts";
 import { themeChange } from "theme-change";
 import LoadingScreen from "@/components/LoadingScreen";
+import SideNav from "@/components/SideNav";
 
 export default function Home() {
   const [error, setError] = useState("");
@@ -35,15 +33,11 @@ export default function Home() {
     description: "Created with ♡ by Weatherify, Hope you enjoy it!",
   });
   const [selectedTab, setSelectedTab] = useState("weather x time");
+  const [user, setUser] = useState({});
+  const [isHamburger, setIsHamburger] = useState(true);
 
   const router = useRouter();
-  const bottomViewRef = useRef();
   const user_id = Cookies.get("user_id");
-
-  const playlist_body = {
-    name: "Weatherify Playlist",
-    description: "Created with ♡ by Weatherify, Hope you enjoy it!",
-  };
 
   useEffect(() => {
     if (!Cookies.get("refresh_token")) {
@@ -51,6 +45,27 @@ export default function Home() {
     }
     themeChange(false);
   }, [router]);
+
+  useEffect(() => {
+    if (!user.id) {
+      getUserProfileData();
+    }
+  }, []);
+
+  const getUserProfileData = async () => {
+    try {
+      const user_id = Cookies.get("user_id");
+      if (localStorage.getItem(user_id)) {
+        setUser(JSON.parse(localStorage.getItem(user_id)));
+        return;
+      }
+      const response = await axiosConfig.get(`mongodb/user?id=${user_id}`);
+      setUser(response.data.user);
+      localStorage.setItem(user_id, JSON.stringify(response.data.user));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const fetchRecommendations = async () => {
     if (isProcessing) return;
@@ -97,7 +112,9 @@ export default function Home() {
       // Set playlist body here, so that it'll be weather and time related
       setPlaylistBody({
         name: `${weatherStatus.main} x ${weatherStatus.time_period}`,
-        description: "Created with 🤍 by Weatherify, Hope you enjoy it!  // " + new Date().toLocaleDateString()
+        description:
+          "Created with 🤍 by Weatherify, Hope you enjoy it!  // " +
+          new Date().toLocaleDateString(),
       });
     } catch (error) {
       console.error(error);
@@ -155,11 +172,9 @@ export default function Home() {
   };
 
   return (
-    <main className="relative">
-      {isLoading ? (
-        <LoadingScreen />
-      ) : null}
-      <Navbar selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+    <main className="relative ">
+      {isLoading ? <LoadingScreen /> : null}
+      <Navbar isHamburger={isHamburger} setIsHamburger={setIsHamburger} />
       <Recommendations
         isRecommendations={isRecommendations}
         setIsRecommendations={setIsRecommendations}
@@ -169,101 +184,118 @@ export default function Home() {
         createPlaylist={createPlaylist}
         isProcessing={isProcessing}
       />
-      <div className="flex items-center justify-center">
+      <div className="flex justify-center">
         {error ? (
           <Alert
-          type="error"
-          message={error}
-          relativeClasses="bg-error alert-error fixed mt-16 mx-4"
+            type="error"
+            message={error}
+            relativeClasses="bg-error alert-error fixed mt-20 xl:mt-10 mx-4"
           />
-          ) : null}
+        ) : null}
         {success ? (
           <Alert
-          type="success"
-          message={success}
-          relativeClasses="bg-success alert-success fixed mt-16 mx-4"
+            type="success"
+            message={success}
+            relativeClasses="bg-success alert-success fixed mt-20 xl:mt-10 mx-4"
           />
-          ) : null}
-        </div>
-      <section className="p-2 relative md:flex md:justify-center" >
-        <section className={`${selectedTab === "weather x time" ? "flex" : "hidden"} flex-col gap-4`}>
+        ) : null}
+      </div>
+      <section className="relative md:flex md:flex-row md:gap-1">
+        <SideNav user={user} setSelectedTab={setSelectedTab} selectedTab={selectedTab} isHamburger={isHamburger} />
 
-          <Weather
-            setWeatherStatus={setWeatherStatus}
-            weatherStatus={weatherStatus}
-            setError={setError}
-          />
-          <section className="flex flex-col md:flex-row gap-4">
-            <UsersTopArtists setIsLoading={setIsLoading} user_id={user_id} />
-            <section className="flex flex-col gap-3">
-              <div className="collapse collapse-arrow bg-base-200 w-full max-w-xl shadow-md">
-                <input type="checkbox" />
-                <div className="collapse-title text-2xl font-medium text-accent">
-                  Filters
-                </div>
-                <div className="collapse-content">
-                  <div className="rounded-2xl bg-base-100 p-4">
-                    <div
-                      className="flex flex-col gap-2 mb-2"
-                      id="recommendations-priority"
-                    >
-                      <h2 className="text-accent text-xl font-bold">Priority</h2>
-                      <div className="join">
-                        <input
-                          className="join-item btn btn-outline btn-accent btn-xs rounded-full"
-                          type="radio"
-                          name="options"
-                          aria-label="Weather"
-                          checked={priority === "Weather"}
-                          onChange={() => setPriority("Weather")}
-                        />
-                        <input
-                          className="join-item btn btn-outline btn-accent btn-xs rounded-full"
-                          type="radio"
-                          name="options"
-                          aria-label="Balanced"
-                          checked={priority === "Balanced"}
-                          onChange={() => setPriority("Balanced")}
-                        />
-                        <input
-                          className="join-item btn btn-outline btn-accent btn-xs rounded-full"
-                          type="radio"
-                          name="options"
-                          aria-label="Time"
-                          checked={priority === "Time"}
-                          onChange={() => setPriority("Time")}
-                        />
+        <div className="p-2">
+          <section
+            className={`${
+              selectedTab === "weather x time" ? "flex" : "hidden"
+            } flex-col gap-2 md:gap-4`}
+          >
+            <Weather
+              setWeatherStatus={setWeatherStatus}
+              weatherStatus={weatherStatus}
+              setError={setError}
+            />
+            <section className="flex flex-col lg:flex-row gap-2 md:gap-4">
+              <UsersTopArtists setIsLoading={setIsLoading} user_id={user_id} />
+              <section className="flex flex-col gap-3 lg:max-w-[350px]">
+                <div className="collapse collapse-arrow bg-base-200 w-full max-w-xl shadow-md">
+                  <input type="checkbox" />
+                  <div className="collapse-title text-2xl font-medium text-accent">
+                    Filters
+                  </div>
+                  <div className="collapse-content">
+                    <div className="rounded-2xl bg-base-100 p-4">
+                      <div
+                        className="flex flex-col gap-2 mb-2"
+                        id="recommendations-priority"
+                      >
+                        <h2 className="text-accent text-xl font-bold">
+                          Priority
+                        </h2>
+                        <div className="join">
+                          <input
+                            className="join-item btn btn-outline btn-accent btn-xs rounded-full"
+                            type="radio"
+                            name="options"
+                            aria-label="Weather"
+                            checked={priority === "Weather"}
+                            onChange={() => setPriority("Weather")}
+                          />
+                          <input
+                            className="join-item btn btn-outline btn-accent btn-xs rounded-full"
+                            type="radio"
+                            name="options"
+                            aria-label="Balanced"
+                            checked={priority === "Balanced"}
+                            onChange={() => setPriority("Balanced")}
+                          />
+                          <input
+                            className="join-item btn btn-outline btn-accent btn-xs rounded-full"
+                            type="radio"
+                            name="options"
+                            aria-label="Time"
+                            checked={priority === "Time"}
+                            onChange={() => setPriority("Time")}
+                          />
+                        </div>
                       </div>
+                      <Genres
+                        selectedGenres={selectedGenres}
+                        setSelectedGenres={setSelectedGenres}
+                      />
                     </div>
-                    <Genres
-                      selectedGenres={selectedGenres}
-                      setSelectedGenres={setSelectedGenres}
-                    />
                   </div>
                 </div>
-              </div>
-              <button
-                className="btn btn-primary w-full max-w-xl drop-shadow-lg"
-                onClick={fetchRecommendations}
-              >
-                {isProcessing ? (
-                  <>
-                    <span className="loading loading-spinner"></span>
-                    Getting Recommendations...
-                  </>
-                ) : (
-                  "Get Recommendations"
-                )}
-              </button>
+                <button
+                  className="btn btn-primary w-full max-w-xl drop-shadow-lg"
+                  onClick={fetchRecommendations}
+                >
+                  {isProcessing ? (
+                    <>
+                      <span className="loading loading-spinner"></span>
+                      Getting Recommendations...
+                    </>
+                  ) : (
+                    "Get Recommendations"
+                  )}
+                </button>
+              </section>
             </section>
           </section>
-        </section>
-        <section className={`${selectedTab === "mood x activity" ? "" : "hidden"} text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}>
-                  <h1>Comming soon😁</h1>
-        </section>
-        <section className={`${selectedTab === "you x custom" ? "" : "hidden"} text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}>
-                  <h1>Comming soon😉</h1>
-        </section>
+          <section
+            className={`${
+              selectedTab === "mood x activity" ? "" : "hidden"
+            } text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}
+          >
+            <h1>Comming soon😁</h1>
+          </section>
+          <section
+            className={`${
+              selectedTab === "you x custom" ? "" : "hidden"
+            } text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}
+          >
+            <h1>Comming soon😉</h1>
+          </section>
+        </div>
       </section>
     </main>
   );

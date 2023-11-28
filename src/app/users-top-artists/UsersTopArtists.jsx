@@ -27,22 +27,27 @@ function UsersTopArtists({ user_id, setIsLoading }) {
   }, [user_id]);
 
   return (
-    <main className="flex flex-col gap-2 bg-base-200 p-2 md:p-4 rounded-xl items-center shadow-md ">
-      <h1 className="text-3xl md:text-4xl">Your Recent Top Artists</h1>
-      <section className="grid grid-cols-2 md:grid-cols-3 gap-2 place-items-center">
-        {usersTopArtists?.length === 0 ?  (
-          <div className="break-words bg-base-200 p-4 grid grid-cols-1 w-52 md:w-96 gap-2">
-            <h1 className="text-2xl">No top artists.</h1>
-            <p>
-              It may be that your Spotify account is new or you haven&apos;t
-              listened much songs in recent time, no worries you can choose upto
-              5 geners from below and then you&apos;ll get recommendations based on
-              those genres.
-            </p>
-          </div>
-        ): null}
-        {usersTopArtists?.map((artist) => (
-          <div className="flex flex-col p-2 bg-base-100 rounded-lg" key={artist.id}>
+    <main className="grid gap-2 bg-base-200 p-2 md:p-4 rounded-xl max-w-fit items-center shadow-md overflow-x-auto">
+      <h1 className="text-3xl md:text-4xl font-semibold">
+        Your Recent Top Artists
+      </h1>
+      {usersTopArtists?.length === 0 ? (
+        <div className="break-words bg-base-200 p-4 flex flex-col max-w-xs gap-2">
+          <h1 className="text-2xl">No top artists.</h1>
+          <p>
+            It may be that your Spotify account is new or you haven&apos;t
+            listened much songs in recent time, no worries you can choose upto 5
+            geners from below and then you&apos;ll get recommendations based on
+            those genres.
+          </p>
+        </div>
+      ) : (
+        <section className="grid grid-cols-3 gap-2 place-items-center w-max overflow-x-auto">
+          {usersTopArtists?.map((artist) => (
+          <div
+            className="flex flex-col p-2 bg-base-100 rounded-lg"
+            key={artist.id}
+          >
             <div className="relative">
               <Image
                 className="rounded-md h-44 w-44 object-cover shadow-lg"
@@ -69,7 +74,10 @@ function UsersTopArtists({ user_id, setIsLoading }) {
               </div>
             </div>
             <h2 className="break-words mt-1">{artist.name}</h2>
-            <div className="tooltip tooltip-secondary" data-tip="Recent Global Popularity">
+            <div
+              className="tooltip tooltip-secondary"
+              data-tip="Recent Global Popularity"
+            >
               <progress
                 className="progress progress-secondary"
                 value={artist.popularity}
@@ -77,10 +85,11 @@ function UsersTopArtists({ user_id, setIsLoading }) {
               ></progress>
             </div>
           </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      )}
     </main>
   );
-};
+}
 
 export default UsersTopArtists;
