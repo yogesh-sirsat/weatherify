@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getUsersTopArtists } from "@/utils/usersTopArtists";
 import getAccessToken from "@/utils/getAccessToken";
 import Image from "next/image";
+import SpotifyIcon from "@/components/SpotifyIcon";
 
-function UsersTopArtists({ user_id, setIsLoading }) {
+function UsersTopArtists({ user_id, setIsLoading, theme }) {
   const [usersTopArtists, setUsersTopArtists] = useState(null);
 
   useEffect(() => {
@@ -44,47 +45,40 @@ function UsersTopArtists({ user_id, setIsLoading }) {
       ) : (
         <section className="grid grid-cols-3 gap-2 place-items-center w-max overflow-x-auto">
           {usersTopArtists?.map((artist) => (
-          <div
-            className="flex flex-col p-2 bg-base-100 rounded-lg"
-            key={artist.id}
-          >
-            <div className="relative">
-              <Image
-                className="rounded-md h-44 w-44 object-cover shadow-lg"
-                src={artist.images[1].url}
-                alt={artist.name}
-                width={240}
-                height={240}
-              />
-              <div className="absolute rounded-md bg-base-200 opacity-0 hover:opacity-100 hover:bg-neutral/75 inset-0 p-2">
-                <a
-                  className="flex flex-row gap-1 p-2 absolute inset-x-0 bottom-0"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  href={artist.external_urls.spotify}
-                >
-                  <Image
-                    width={16}
-                    height={16}
-                    src="/spotify_icons/Spotify_Icon_RGB_Green.png"
-                    alt="spotify_logo"
-                  ></Image>
-                  <p className="text-xs text-gray-100">OPEN IN SPOTIFY</p>
-                </a>
+            <div
+              className="flex flex-col p-2 bg-base-100 rounded-lg"
+              key={artist.id}
+            >
+              <div className="relative">
+                <Image
+                  className="h-44 w-44 object-cover shadow-lg"
+                  src={artist.images[1].url}
+                  alt={artist.name}
+                  width={240}
+                  height={240}
+                />
+              </div>
+              <h2 className="break-words mt-1">{artist.name}</h2>
+              <a
+                className="flex flex-row gap-1 py-1"
+                rel="noopener noreferrer"
+                target="_blank"
+                href={artist.external_urls.spotify}
+              >
+                <SpotifyIcon theme={theme} width={16} height={16} />
+                <p className="text-xs self-center">LISTEN ON SPOTIFY</p>
+              </a>
+              <div
+                className="tooltip tooltip-secondary"
+                data-tip="Recent Global Popularity"
+              >
+                <progress
+                  className="progress progress-secondary"
+                  value={artist.popularity}
+                  max="100"
+                ></progress>
               </div>
             </div>
-            <h2 className="break-words mt-1">{artist.name}</h2>
-            <div
-              className="tooltip tooltip-secondary"
-              data-tip="Recent Global Popularity"
-            >
-              <progress
-                className="progress progress-secondary"
-                value={artist.popularity}
-                max="100"
-              ></progress>
-            </div>
-          </div>
           ))}
         </section>
       )}

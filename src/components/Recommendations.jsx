@@ -4,8 +4,8 @@ import ArrowPath from "./svgs/ArrowPath";
 import XMark from "./svgs/XMark";
 import Alert from "./Alert";
 import manageAlerts from "@/utils/manageAlerts";
-import LoadingScreen from "./LoadingScreen";
 import LoadingSkeleton from "./LoadingSkeleton";
+import SpotifyIcon from "./SpotifyIcon";
 
 function Recommendations({
   isRecommendations,
@@ -15,6 +15,7 @@ function Recommendations({
   fetchRecommendations,
   createPlaylist,
   isProcessing,
+  theme,
 }) {
   const [warning, setWarning] = useState(null);
 
@@ -49,7 +50,7 @@ function Recommendations({
               relativeClasses="bg-warning alert-warning fixed mx-8 mt-20 inset-x-0"
             />
           ) : null}
-          <header className="sticky backdrop-blur-md bg-base-200 bg-opacity-50 top-0 p-2 md:p-4 flex flex-row gap-2 z-30">
+          <header className="sticky backdrop-blur-md bg-base-200 bg-opacity-50 top-0 p-1 md:p-2 flex flex-row gap-2 z-30">
             <button
               className="btn btn-ghost"
               onClick={() => setIsRecommendations(false)}
@@ -87,11 +88,11 @@ function Recommendations({
             <ul>
               {recommendations.map((track) => (
                 <li
-                  className="relative flex flex-col p-4 m-3 bg-base-100 rounded-2xl"
+                  className="relative flex flex-col p-3 m-2 bg-base-100 rounded-2xl"
                   key={track.id}
                 >
                   <button
-                    className="btn btn-ghost btn-sm mr-1 mt-1 mb-4 ml-4 p-1.5 hover:bg-error absolute z-10 top-0 right-0"
+                    className="btn btn-ghost btn-sm mb-4 ml-4 p-1 hover:bg-error absolute z-10 top-2 right-2"
                     onClick={() => removeFromRecommendations(track.id)}
                   >
                     <XMark />
@@ -115,12 +116,7 @@ function Recommendations({
                         target="_blank"
                         href={track.external_urls.spotify}
                       >
-                        <Image
-                          width={16}
-                          height={16}
-                          src="/spotify_icons/Spotify_Icon_RGB_Green.png"
-                          alt="spotify_logo"
-                        ></Image>
+                        <SpotifyIcon theme={theme} width={16} height={16} />
                         <p className="text-xs">PLAY ON SPOTIFY</p>
                       </a>
                     </div>
@@ -150,7 +146,10 @@ function Recommendations({
               className="tooltip tooltip-success"
               data-tip="Creates new playlist in Spotify!"
             >
-              <button className="btn btn-success btn-sm" onClick={createPlaylist}>
+              <button
+                className="btn btn-success btn-sm"
+                onClick={createPlaylist}
+              >
                 Create Playlist - {recommendations.length}
               </button>
             </div>
@@ -160,6 +159,6 @@ function Recommendations({
       <section className="w-screen h-full"></section>
     </main>
   );
-};
+}
 
 export default Recommendations;

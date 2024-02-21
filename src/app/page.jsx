@@ -35,6 +35,7 @@ export default function Home() {
   const [selectedTab, setSelectedTab] = useState("weather x time");
   const [user, setUser] = useState({});
   const [isHamburger, setIsHamburger] = useState(true);
+  const [theme, setTheme] = useState("synthwave");
 
   const router = useRouter();
   const user_id = Cookies.get("user_id");
@@ -49,6 +50,10 @@ export default function Home() {
   useEffect(() => {
     if (!user.id) {
       getUserProfileData();
+    }
+    const currentTheme = localStorage.getItem("theme");
+    if (currentTheme) {
+      setTheme(currentTheme);
     }
   }, []);
 
@@ -174,7 +179,11 @@ export default function Home() {
   return (
     <main className="relative ">
       {isLoading ? <LoadingScreen /> : null}
-      <Navbar isHamburger={isHamburger} setIsHamburger={setIsHamburger} />
+      <Navbar
+        isHamburger={isHamburger}
+        setIsHamburger={setIsHamburger}
+        setTheme={setTheme}
+      />
       <Recommendations
         isRecommendations={isRecommendations}
         setIsRecommendations={setIsRecommendations}
@@ -183,6 +192,7 @@ export default function Home() {
         fetchRecommendations={fetchRecommendations}
         createPlaylist={createPlaylist}
         isProcessing={isProcessing}
+        theme={theme}
       />
       <div className="flex justify-center">
         {error ? (
@@ -201,7 +211,13 @@ export default function Home() {
         ) : null}
       </div>
       <section className="relative md:flex md:flex-row md:gap-1">
-        <SideNav user={user} setSelectedTab={setSelectedTab} selectedTab={selectedTab} isHamburger={isHamburger} />
+        <SideNav
+          setTheme={setTheme}
+          user={user}
+          setSelectedTab={setSelectedTab}
+          selectedTab={selectedTab}
+          isHamburger={isHamburger}
+        />
 
         <div className="p-2">
           <section
@@ -215,7 +231,11 @@ export default function Home() {
               setError={setError}
             />
             <section className="flex flex-col lg:flex-row gap-2 md:gap-4">
-              <UsersTopArtists setIsLoading={setIsLoading} user_id={user_id} />
+              <UsersTopArtists
+                setIsLoading={setIsLoading}
+                user_id={user_id}
+                theme={theme}
+              />
               <section className="flex flex-col gap-3 lg:max-w-[350px]">
                 <div className="collapse collapse-arrow bg-base-200 w-full max-w-xl shadow-md">
                   <input type="checkbox" />
