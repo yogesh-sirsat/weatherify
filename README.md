@@ -12,11 +12,9 @@ Weatherify synchronizes music recommendations with the user's Circadian Rhythm, 
 ##### Genre Based Filtering(more to come).
 
 ### How to use:
-Since this project heavily reliase on Spotify Web API, right now the Spotify Web API plan of this project is still in `Development Mode` and because of this, access to this project is only after I put Spotify users name and email in Spotify Web API dashboard, so feel free to email me your Spotify accounts name and email at [yogeshsirsat56@gmail.com](mailto:yogeshsirsat56@gmail.com?subject=Access%20To%20Weatherify).
-For temporary uses or testing you can use spotify accounts credentials given below.
-`Email: ` `ysirsat123@gmail.com`
-`Password: ` `ysirsat@123`
-(FYI this is personal dummy account I created for this project specifically)
+Log in with spotify so system can fetch your listening history and create playlists on your account. For better accuracy allow website your location access or you can just enter your city manually, after that system will fetch your live weather conditions and local time,
+website is providing you filtering options like whether  you want recommendations more towards your local time or weather or balanced between this two, and genres(if you are filtering with genre then recommendtions will not consider your spotify listening history.)
+And now when you click on create recommendations your will see window pop-up from right side with generated recommendations, before clicking on create playlist from it, you can listen them with spotify direct link and also remove some tracks from it. Now once you finalized with tracks you can click on create playlist and tada!! you can see new playlist in your spotify library, listen and enjoy it, after that you can let me know whether you liked it or it needs some improvements.
 
 [Screenshots](https://1drv.ms/f/s!AljPuC-a7vuNqgoBUHdOIqGvCTNM?e=yxprZO)
 
