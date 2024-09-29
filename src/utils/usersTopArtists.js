@@ -18,9 +18,15 @@ const getUsersTopArtists = async (user_id, access_token, time_range="short_term"
     };
     const response = await axiosSpotify.get("me/top/artists", config);
     console.log("response: ", response);
-    if (response.data.items.length === 0) {
+    if (response.data.items.length === 0 && time_range === "short_term") {
       // if no data from short_term then request again with medium_term
       return getUsersTopArtists(user_id, access_token, "medium_term");
+    } else if (response.data.items.length === 0 && time_range === "medium_term") {
+      // if no data from medium_term then request again with long_term
+      return getUsersTopArtists(user_id, access_token, "long_term");
+    }
+    if (response.data.items.length === 0) {
+      return [];
     }
     setLocalStorageWithExpiry(
       user_id + "_top_artists",
