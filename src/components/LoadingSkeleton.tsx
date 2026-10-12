@@ -1,4 +1,6 @@
-function LoadingSkeleton() {
+import React, { FC } from "react";
+
+const LoadingSkeleton: FC = () => {
   return (
     <li className="relative flex flex-col p-4 m-3 gap-2 bg-base-100 rounded-2xl">
       <div className="animate-pulse">
@@ -13,6 +15,6 @@ function LoadingSkeleton() {
       </div>
     </li>
   );
-}
+};
 
 export default LoadingSkeleton;

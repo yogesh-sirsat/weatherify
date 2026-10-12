@@ -1,12 +1,24 @@
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import React, { useEffect, useState, FC } from "react";
 import { getUsersTopArtists } from "@/utils/usersTopArtists";
 import getAccessToken from "@/utils/getAccessToken";
 import Image from "next/image";
 import SpotifyIcon from "@/components/SpotifyIcon";
+import { SpotifyArtist } from "@/types/spotify";
 
-function UsersTopArtists({ user_id, setIsLoading, theme }) {
-  const [usersTopArtists, setUsersTopArtists] = useState(null);
+interface UsersTopArtistsProps {
+  user_id: string;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  theme: string;
+}
+
+const UsersTopArtists: FC<UsersTopArtistsProps> = ({
+  user_id,
+  setIsLoading,
+  theme,
+}) => {
+  const [usersTopArtists, setUsersTopArtists] = useState<SpotifyArtist[] | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchUsersTopArtists = async () => {
@@ -25,7 +37,7 @@ function UsersTopArtists({ user_id, setIsLoading, theme }) {
     };
 
     fetchUsersTopArtists();
-  }, [user_id]);
+  }, [user_id, setIsLoading]);
 
   return (
     <main className="grid gap-2 bg-base-200 p-2 md:p-4 rounded-xl max-w-fit items-center shadow-md overflow-x-auto">
@@ -52,7 +64,7 @@ function UsersTopArtists({ user_id, setIsLoading, theme }) {
               <div className="relative">
                 <Image
                   className="h-44 w-44 object-cover shadow-lg"
-                  src={artist.images[1].url}
+                  src={artist.images[1]?.url || artist.images[0]?.url || ""}
                   alt={artist.name}
                   width={240}
                   height={240}
@@ -84,6 +96,6 @@ function UsersTopArtists({ user_id, setIsLoading, theme }) {
       )}
     </main>
   );
-}
+};
 
 export default UsersTopArtists;

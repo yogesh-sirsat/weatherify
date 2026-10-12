@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import axios from "axios";
 
+interface SpotifyTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type?: string;
+  scope?: string;
+}
+
 export async function GET() {
-  const cookieStore = cookies();
-  const refresh_token = cookieStore.get("refresh_token").value;
+  const cookieStore = await cookies();
+  const refresh_token = cookieStore.get("refresh_token")?.value;
   const client_id = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
   const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 
@@ -28,8 +36,7 @@ export async function GET() {
 
   try {
     const data = `grant_type=refresh_token&refresh_token=${refresh_token}`;
-    // Make the POST request to Spotify API
-    const response = await axios.post(
+    const response = await axios.post<SpotifyTokenResponse>(
       "https://accounts.spotify.com/api/token",
       data,
       {
@@ -58,34 +65,33 @@ export async function GET() {
         { status: response.status }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    if (error.response) {
-      if (error.response.status === 400) {
-        return NextResponse.json(
-          {
-            error: "Needs user to sign in again",
-          },
-          { status: 400 }
-        );
-      }
+    if (error?.response?.status === 400) {
+      return NextResponse.json(
+        {
+          error: "Needs user to sign in again",
+        },
+        { status: 400 }
+      );
     }
     return NextResponse.json(
       {
-        error: error.message,
+        error: error?.message || "Internal Server Error",
       },
       { status: 500 }
     );
   }
 }
 
-const setTokensInCookies = (data, cookieStore) => {
+const setTokensInCookies = (
+  data: SpotifyTokenResponse,
+  cookieStore: Awaited<ReturnType<typeof cookies>>
+) => {
   const { access_token, refresh_token, expires_in } = data;
-  // Setting expirty time of access token before 6 minutes of original expiry time
   const access_token_expires_at = new Date(
     Date.now() + (expires_in - 360) * 1000
   );
-  // Setting expirty time of refresh token of 6 months
   const refresh_token_expires_at = new Date();
   refresh_token_expires_at.setMonth(refresh_token_expires_at.getMonth() + 6);
 
@@ -94,13 +100,16 @@ const setTokensInCookies = (data, cookieStore) => {
     value: access_token,
     expires: access_token_expires_at,
     sameSite: "strict",
-    secure: process.env.NEXT_PUBLIC_SECURE_COOKIE,
+    secure: Boolean(process.env.NEXT_PUBLIC_SECURE_COOKIE),
   });
-  cookieStore.set({
-    name: "refresh_token",
-    value: refresh_token,
-    expires: refresh_token_expires_at,
-    sameSite: "strict",
-    secure: process.env.NEXT_PUBLIC_SECURE_COOKIE,
-  });
+
+  if (refresh_token) {
+    cookieStore.set({
+      name: "refresh_token",
+      value: refresh_token,
+      expires: refresh_token_expires_at,
+      sameSite: "strict",
+      secure: Boolean(process.env.NEXT_PUBLIC_SECURE_COOKIE),
+    });
+  }
 };

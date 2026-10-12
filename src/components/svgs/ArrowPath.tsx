@@ -1,4 +1,10 @@
-const ArrowPath = () => {
+import React from "react";
+
+interface SvgProps {
+  className?: string;
+}
+
+const ArrowPath: React.FC<SvgProps> = ({ className = "w-5 h-5" }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -6,7 +12,7 @@ const ArrowPath = () => {
       viewBox="0 0 24 24"
       strokeWidth={2}
       stroke="currentColor"
-      className="w-5 h-5"
+      className={className}
     >
       <path
         strokeLinecap="round"

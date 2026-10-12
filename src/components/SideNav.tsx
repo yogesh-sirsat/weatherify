@@ -1,7 +1,23 @@
+import React, { FC } from "react";
 import Image from "next/image";
 import Cookies from "js-cookie";
+import { UserProfile } from "@/types/spotify";
 
-function SideNav({ setTheme, user, isHamburger, selectedTab, setSelectedTab }) {
+interface SideNavProps {
+  setTheme: (theme: string) => void;
+  user: UserProfile;
+  isHamburger: boolean;
+  selectedTab: string;
+  setSelectedTab: (tab: string) => void;
+}
+
+const SideNav: FC<SideNavProps> = ({
+  setTheme,
+  user,
+  isHamburger,
+  selectedTab,
+  setSelectedTab,
+}) => {
   const handleDisconnect = () => {
     Cookies.remove("user_id");
     Cookies.remove("access_token");
@@ -13,7 +29,7 @@ function SideNav({ setTheme, user, isHamburger, selectedTab, setSelectedTab }) {
     <aside
       className={`${
         isHamburger ? "hidden xl:flex" : "flex"
-      }  flex-col w-64 fixed xl:sticky min-h-full h-screen px-4 py-8 bg-base-200 z-10 shadow-xl duration-500 ease-in-out`}
+      } flex-col w-64 fixed xl:sticky min-h-full h-screen px-4 py-8 bg-base-200 z-10 shadow-xl duration-500 ease-in-out`}
     >
       <h1 className="btn btn-ghost mx-auto text-2xl normal-case flex items-center">
         Weatherify
@@ -93,6 +109,6 @@ function SideNav({ setTheme, user, isHamburger, selectedTab, setSelectedTab }) {
       </footer>
     </aside>
   );
-}
+};
 
 export default SideNav;

@@ -1,4 +1,12 @@
-function Navbar({ isHamburger, setIsHamburger }) {
+import React, { FC } from "react";
+
+interface NavbarProps {
+  isHamburger: boolean;
+  setIsHamburger: React.Dispatch<React.SetStateAction<boolean>>;
+  setTheme?: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Navbar: FC<NavbarProps> = ({ isHamburger, setIsHamburger }) => {
   return (
     <nav className="xl:hidden navbar bg-base-100 fixed top-0 inset-x-0 z-10 shadow-md md:shadow-lg">
       <div className="flex-1">
@@ -38,6 +46,6 @@ function Navbar({ isHamburger, setIsHamburger }) {
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;

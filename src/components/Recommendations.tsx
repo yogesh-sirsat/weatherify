@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, FC } from "react";
 import Image from "next/image";
 import ArrowPath from "./svgs/ArrowPath";
 import XMark from "./svgs/XMark";
@@ -6,8 +6,20 @@ import Alert from "./Alert";
 import manageAlerts from "@/utils/manageAlerts";
 import LoadingSkeleton from "./LoadingSkeleton";
 import SpotifyIcon from "./SpotifyIcon";
+import { SpotifyTrack } from "@/types/spotify";
 
-function Recommendations({
+interface RecommendationsProps {
+  isRecommendations: boolean;
+  setIsRecommendations: React.Dispatch<React.SetStateAction<boolean>>;
+  recommendations: SpotifyTrack[];
+  setRecommendations: React.Dispatch<React.SetStateAction<SpotifyTrack[]>>;
+  fetchRecommendations: () => void | Promise<void>;
+  createPlaylist: () => void | Promise<void>;
+  isProcessing: boolean;
+  theme: string;
+}
+
+const Recommendations: FC<RecommendationsProps> = ({
   isRecommendations,
   setIsRecommendations,
   recommendations,
@@ -16,10 +28,10 @@ function Recommendations({
   createPlaylist,
   isProcessing,
   theme,
-}) {
-  const [warning, setWarning] = useState(null);
+}) => {
+  const [warning, setWarning] = useState<string | null>(null);
 
-  const removeFromRecommendations = (id) => {
+  const removeFromRecommendations = (id: string) => {
     if (recommendations.length === 2) {
       manageAlerts(setWarning, "Playlists need at least 2 tracks!");
       return;
@@ -100,21 +112,21 @@ function Recommendations({
                   <div className="flex flex-row gap-2 hover:bg-opacity-60">
                     <Image
                       className="rounded-sm"
-                      src={track.album.images[0].url}
-                      alt={track.album.name}
+                      src={track.album?.images?.[0]?.url || ""}
+                      alt={track.album?.name || track.name}
                       width={120}
                       height={120}
-                    ></Image>
+                    />
                     <div className="relative flex flex-col p-2 w-full">
                       <h2 className="text-medium break-words">{track.name}</h2>
                       <h4 className="text-xs break-words">
-                        {track.artists.map((artist) => artist.name).join(", ")}
+                        {track.artists?.map((artist) => artist.name).join(", ")}
                       </h4>
                       <a
                         className="flex flex-row gap-1 absolute bottom-0 pb-2"
                         rel="noopener noreferrer"
                         target="_blank"
-                        href={track.external_urls.spotify}
+                        href={track.external_urls?.spotify}
                       >
                         <SpotifyIcon theme={theme} width={16} height={16} />
                         <p className="text-xs">PLAY ON SPOTIFY</p>
@@ -127,7 +139,7 @@ function Recommendations({
                   >
                     <progress
                       className="progress progress-secondary"
-                      value={track.popularity}
+                      value={track.popularity ?? 0}
                       max="100"
                     ></progress>
                   </div>
@@ -159,6 +171,6 @@ function Recommendations({
       <section className="w-screen h-full"></section>
     </main>
   );
-}
+};
 
 export default Recommendations;

@@ -1,7 +1,13 @@
+import React, { useState, useEffect, FC } from "react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
 
-export default function SpotifyIcon({ theme, width, height }) {
+interface SpotifyIconProps {
+  theme?: string;
+  width?: number;
+  height?: number;
+}
+
+const SpotifyIcon: FC<SpotifyIconProps> = ({ theme, width = 16, height = 16 }) => {
   const [iconSrc, setIconSrc] = useState(
     "/spotify_icons/Spotify_Icon_RGB_Green.png"
   );
@@ -31,8 +37,10 @@ export default function SpotifyIcon({ theme, width, height }) {
     <Image
       src={iconSrc}
       alt="Spotify Icon"
-      width={width || 16}
-      height={height || 16}
+      width={width}
+      height={height}
     />
   );
-}
+};
+
+export default SpotifyIcon;

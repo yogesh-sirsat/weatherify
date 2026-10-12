@@ -1,4 +1,6 @@
-function XIcon() {
+import React from "react";
+
+export function XIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -14,9 +16,9 @@ function XIcon() {
       />
     </svg>
   );
-};
+}
 
-function TickIcon() {
+export function TickIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -32,9 +34,9 @@ function TickIcon() {
       />
     </svg>
   );
-};
+}
 
-function ExclamationTriangle() {
+export function ExclamationTriangle() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -52,9 +54,3 @@ function ExclamationTriangle() {
     </svg>
   );
 }
-
-export {
-  XIcon,
-  TickIcon,
-  ExclamationTriangle
-};
