@@ -18,7 +18,9 @@ import { themeChange } from "theme-change";
 import LoadingScreen from "@/components/LoadingScreen";
 import SideNav from "@/components/SideNav";
 import { WeatherStatus } from "@/types/weather";
-import { RecommendationPriority, SpotifyTrack } from "@/types/spotify";
+import { AudioFeatures, CustomAudioFeatures, PlaylistSettings, RecommendationPriority, SpotifyTrack } from "@/types/spotify";
+import CustomRecommendations from "@/components/CustomRecommendations";
+import MoodActivityRecommendations from "@/components/MoodActivityRecommendations";
 
 interface User {
   id: string;
@@ -26,10 +28,30 @@ interface User {
   images: Array<{ url: string }>;
 }
 
-interface PlaylistBody {
-  name: string;
-  description: string;
-}
+const coverFileToJpegBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+  const image = new window.Image();
+  const objectUrl = URL.createObjectURL(file);
+  image.onload = () => {
+    const scale = Math.min(1, 640 / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      URL.revokeObjectURL(objectUrl);
+      if (!blob) return reject(new Error("Could not prepare cover image"));
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }, "image/jpeg", 0.8);
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl);
+    reject(new Error("Could not read cover image"));
+  };
+  image.src = objectUrl;
+});
 
 const Home: FC = () => {
   const [error, setError] = useState<string>("");
@@ -40,15 +62,19 @@ const Home: FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [weatherStatus, setWeatherStatus] = useState<WeatherStatus | null>(null);
   const [recommendations, setRecommendations] = useState<SpotifyTrack[]>([]);
+  const [excludedTrackIds, setExcludedTrackIds] = useState<Set<string>>(new Set());
   const [priority, setPriority] = useState<RecommendationPriority>("Balanced");
-  const [playlistBody, setPlaylistBody] = useState<PlaylistBody>({
+  const [trackCount, setTrackCount] = useState(20);
+  const [playlistSettings, setPlaylistSettings] = useState<PlaylistSettings>({
     name: "Weatherify Playlist",
     description: "Created with ♡ by Weatherify, Hope you enjoy it!",
+    isPublic: false,
   });
   const [selectedTab, setSelectedTab] = useState("weather x time");
   const [user, setUser] = useState<Partial<User>>({});
   const [isHamburger, setIsHamburger] = useState(true);
   const [theme, setTheme] = useState("synthwave");
+  const [recommendationContext, setRecommendationContext] = useState<{ features: AudioFeatures; discoverNewMusic: boolean } | null>(null);
 
   const router = useRouter();
   const user_id = Cookies.get("user_id");
@@ -89,19 +115,19 @@ const Home: FC = () => {
     }
   };
 
-  const fetchRecommendations = async () => {
-    if (isProcessing || !weatherStatus || !user_id) return;
+  const fetchRecommendations = async (append = false, customFeatures?: AudioFeatures, discoverNewMusic = false, requestedTrackCount = trackCount, additionalTrackCount = 0, preservePlaylistSettings = false) => {
+    if (isProcessing || !user_id || (!weatherStatus && !customFeatures)) return;
     setIsProcessing(true);
     try {
       const access_token = await getAccessToken();
-      const audio_features = await getAudioFeatures(
-        weatherStatus.time_period,
-        weatherStatus.main,
+      const audio_features = customFeatures || await getAudioFeatures(
+        weatherStatus?.time_period || "Midday",
+        weatherStatus?.main || "Clear Sky",
         priority
       );
 
       const params: any = {
-        limit: 20,
+        limit: append ? Math.min(100, Math.max(1, additionalTrackCount)) : requestedTrackCount,
         target_valence: audio_features.valence,
         target_energy: audio_features.energy,
         target_tempo: audio_features.tempo,
@@ -109,6 +135,12 @@ const Home: FC = () => {
         target_danceability: audio_features.danceability,
         target_acousticness: audio_features.acousticness,
         target_mode: audio_features.mode,
+        target_liveness: audio_features.liveness,
+        target_loudness: audio_features.loudness,
+        target_speechiness: audio_features.speechiness,
+        target_popularity: audio_features.popularity,
+        target_duration_ms: audio_features.duration_ms,
+        target_time_signature: audio_features.time_signature,
         max_duration_ms: 8 * 60 * 1000,
       };
 
@@ -118,6 +150,8 @@ const Home: FC = () => {
 
       if (selectedGenres.size > 0) {
         params.seed_genres = Array.from(selectedGenres).slice(0, 5).join(",");
+      } else if (discoverNewMusic) {
+        params.seed_genres = "pop,indie,dance";
       } else {
         const topArtists = await getUsersTopArtistsIds(user_id, access_token);
         if (topArtists && topArtists.trim().length > 0) {
@@ -143,12 +177,18 @@ const Home: FC = () => {
       };
       
       const response = await axiosSpotify.get("recommendations", config);
-      setRecommendations(response.data.tracks || []);
+      const currentIds = new Set(recommendations.map((track) => track.id));
+      const newTracks = (response.data.tracks || []).filter(
+        (track: SpotifyTrack) => !append || (!currentIds.has(track.id) && !excludedTrackIds.has(track.id))
+      ).slice(0, append ? additionalTrackCount : undefined);
+      setRecommendations((current) => append ? [...current, ...newTracks] : newTracks);
       setIsRecommendations(true);
+      if (!append) setRecommendationContext({ features: audio_features, discoverNewMusic });
       
-      setPlaylistBody({
-        name: `${weatherStatus.main} x ${weatherStatus.time_period}`,
+      if (!append && !preservePlaylistSettings) setPlaylistSettings({
+        name: customFeatures ? "My Custom Weatherify Playlist" : `${weatherStatus?.main} x ${weatherStatus?.time_period}`,
         description: `Created with 🤍 by Weatherify, Hope you enjoy it! // ${new Date().toLocaleDateString()}`,
+        isPublic: false,
       });
     } catch (err) {
       console.error("Error fetching recommendations:", err);
@@ -158,7 +198,7 @@ const Home: FC = () => {
     }
   };
 
-  const createPlaylist = async () => {
+  const createPlaylist = async (settings: PlaylistSettings) => {
     if (!user_id) return;
     try {
       const access_token = await getAccessToken();
@@ -170,13 +210,29 @@ const Home: FC = () => {
       // Use modern POST me/playlists with fallback to legacy users/{user_id}/playlists
       let response;
       try {
-        response = await axiosSpotify.post("me/playlists", playlistBody, config);
+        response = await axiosSpotify.post("me/playlists", {
+          name: settings.name,
+          description: settings.description,
+          public: settings.isPublic,
+        }, config);
       } catch {
         response = await axiosSpotify.post(
           `users/${user_id}/playlists`,
-          playlistBody,
+          { name: settings.name, description: settings.description, public: settings.isPublic },
           config
         );
+      }
+
+      if (settings.coverFile) {
+        try {
+          const imageData = await coverFileToJpegBase64(settings.coverFile);
+          await axiosSpotify.put(`playlists/${response.data.id}/images`, imageData, {
+            headers: { Authorization: "Bearer " + access_token, "Content-Type": "image/jpeg" },
+          });
+        } catch (coverError) {
+          console.error("Playlist created, but cover upload failed:", coverError);
+          manageAlerts(setError, "Playlist created, but Spotify could not upload the cover image.");
+        }
       }
 
       // Use modern POST playlists/{id}/items with fallback to legacy tracks
@@ -196,6 +252,8 @@ const Home: FC = () => {
 
       setIsRecommendations(false);
       setRecommendations([]);
+      setExcludedTrackIds(new Set());
+      setRecommendationContext(null);
       
       const spotify_link = response.data.external_urls.spotify;
       const success_msg = `<h4>Playlist created successfully!</h4> <a class="link" rel="noopener noreferrer" target="_blank" href="${spotify_link}">PLAY ON SPOTIFY</a>`;
@@ -217,10 +275,16 @@ const Home: FC = () => {
         setIsRecommendations={setIsRecommendations}
         recommendations={recommendations}
         setRecommendations={setRecommendations}
-        fetchRecommendations={fetchRecommendations}
+        onRemoveTrack={(id) => {
+          setExcludedTrackIds((current) => new Set(current).add(id));
+          setRecommendations((current) => current.filter((track) => track.id !== id));
+        }}
+        refreshRecommendations={() => recommendationContext && fetchRecommendations(false, recommendationContext.features, recommendationContext.discoverNewMusic, trackCount, 0, true)}
+        addMoreTracks={(count) => recommendationContext && fetchRecommendations(true, recommendationContext.features, recommendationContext.discoverNewMusic, trackCount, count)}
         createPlaylist={createPlaylist}
         isProcessing={isProcessing}
         theme={theme}
+        playlistSettings={playlistSettings}
       />
 
       <div className="flex justify-center">
@@ -229,7 +293,7 @@ const Home: FC = () => {
       </div>
 
       <section className="relative md:flex md:flex-row md:gap-1">
-        <SideNav setTheme={setTheme} user={user} setSelectedTab={setSelectedTab} selectedTab={selectedTab} isHamburger={isHamburger} />
+        <SideNav setTheme={setTheme} theme={theme} user={user} setSelectedTab={setSelectedTab} selectedTab={selectedTab} isHamburger={isHamburger} />
 
         <div className="p-2">
           <section className={`${selectedTab === "weather x time" ? "flex" : "hidden"} flex-col gap-2 md:gap-4`}>
@@ -264,7 +328,13 @@ const Home: FC = () => {
                     </div>
                   </div>
                 </div>
-                <button className="btn btn-primary w-full max-w-xl drop-shadow-lg" onClick={fetchRecommendations}>
+                <label className="flex flex-col gap-2 rounded-box border border-base-300 p-3">
+                  <span className="flex items-center justify-between gap-2 font-semibold"><span>Tracks to generate</span><output className="badge badge-primary">{trackCount}</output></span>
+                  <span className="text-xs opacity-70">Choose the size of this playlist.</span>
+                  <input className="range range-primary range-sm" type="range" min="5" max="100" step="5" value={trackCount} onChange={(event) => setTrackCount(Number(event.target.value))} />
+                  <span className="flex justify-between text-xs opacity-60"><span>5 tracks</span><span>100 tracks</span></span>
+                </label>
+                <button className="btn btn-primary w-full max-w-xl drop-shadow-lg" onClick={() => fetchRecommendations(false)}>
                   {isProcessing ? (
                     <><span className="loading loading-spinner"></span>Getting Recommendations...</>
                   ) : (
@@ -275,11 +345,27 @@ const Home: FC = () => {
             </section>
           </section>
 
-          <section className={`${selectedTab === "mood x activity" ? "" : "hidden"} text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}>
-            <h1>Coming soon😁</h1>
+          <section className={`${selectedTab === "mood x activity" ? "flex" : "hidden"} flex-col gap-4 mt-16 md:mt-16 xl:mt-0`}>
+            <MoodActivityRecommendations
+              selectedGenres={selectedGenres}
+              setSelectedGenres={setSelectedGenres}
+              isProcessing={isProcessing}
+              onGenerate={(features, discoverNewMusic, count) => fetchRecommendations(false, features, discoverNewMusic, count)}
+              trackCount={trackCount}
+              setTrackCount={setTrackCount}
+            />
           </section>
-          <section className={`${selectedTab === "you x custom" ? "" : "hidden"} text-6xl inset-x-0 bottom-1/2 fixed font-bold text-center text-accent`}>
-            <h1>Coming soon😉</h1>
+          <section className={`${selectedTab === "user x custom" ? "flex" : "hidden"} flex-col gap-4 mt-16 md:mt-16 xl:mt-0`}>
+            <CustomRecommendations
+              weatherStatus={weatherStatus}
+              priority={priority}
+              selectedGenres={selectedGenres}
+              setSelectedGenres={setSelectedGenres}
+              isProcessing={isProcessing}
+              onGenerate={(features, discoverNewMusic, count) => fetchRecommendations(false, features, discoverNewMusic, count)}
+              trackCount={trackCount}
+              setTrackCount={setTrackCount}
+            />
           </section>
         </div>
       </section>

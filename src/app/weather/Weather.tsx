@@ -535,7 +535,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
             </button>
           </form>
           <h3 className="font-bold text-lg">Set Exact Location</h3>
-          <p className="p-4 mt-2 text-sm bg-info rounded-xl italic text-gray-900">
+          <p className="p-4 mt-2 text-sm bg-info text-info-content rounded-xl italic">
             Search your neighborhood, area, street, or city for hyper-local weather.
           </p>
           {modalError && (

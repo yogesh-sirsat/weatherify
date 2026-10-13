@@ -3,6 +3,7 @@ import React, { FC, useEffect } from "react";
 interface GenresProps {
   selectedGenres: Set<string>;
   setSelectedGenres: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onInteraction?: () => void;
 }
 
 const genres: string[] = [
@@ -41,12 +42,13 @@ const genres: string[] = [
   "trip-hop",
 ];
 
-const Genres: FC<GenresProps> = ({ selectedGenres, setSelectedGenres }) => {
+const Genres: FC<GenresProps> = ({ selectedGenres, setSelectedGenres, onInteraction }) => {
   useEffect(() => {
     console.log(selectedGenres);
   }, [selectedGenres]);
 
   const toggleGenre = (genre: string) => {
+    onInteraction?.();
     setSelectedGenres((prevSelectedGenres) => {
       const newSelectedGenres = new Set(prevSelectedGenres);
       if (newSelectedGenres.has(genre)) {

@@ -51,8 +51,9 @@ export const normalizeWeatherCategory = (rawCondition: string): string => {
 };
 
 /**
- * Define audio feature values for different weather conditions.
- * Tuned accurately to reflect emotional resonance and musical textures of weather.
+ * Weather is not a Spotify audio feature, so these are intentional listening
+ * heuristics: weather changes the emotional direction while staying inside
+ * realistic ranges for Spotify's tunable attributes.
  */
 const audioFeaturesByWeather = async (weatherCondition: string): Promise<AudioFeatures> => {
   const category = normalizeWeatherCategory(weatherCondition);
@@ -179,8 +180,8 @@ const audioFeaturesByWeather = async (weatherCondition: string): Promise<AudioFe
 };
 
 /**
- * Define audio feature values for different time periods.
- * Reflects natural human circadian rhythms throughout the 24-hour cycle.
+ * Time-of-day listening heuristics. The curve rises into the day and eases
+ * toward night instead of making each period an unrelated genre switch.
  */
 const audioFeaturesByTime = async (timePeriod: TimePeriod): Promise<AudioFeatures> => {
   switch (timePeriod) {
@@ -510,8 +511,15 @@ const getAudioFeatures = async (
       blended_audio_features.key = key;
 
       if (audio_features_from_time.mode !== audio_features_from_weather.mode) {
-        // Minor mode preferred between both major and minor for rich color
-        blended_audio_features.mode = 0;
+        // When the signals disagree, use their emotional features to choose
+        // the mode instead of always biasing the balanced preset toward minor.
+        const moodScore = (
+          audio_features_from_time.valence +
+          audio_features_from_weather.valence +
+          audio_features_from_time.energy +
+          audio_features_from_weather.energy
+        ) / 4;
+        blended_audio_features.mode = moodScore >= 0.5 ? 1 : 0;
       } else {
         blended_audio_features.mode = audio_features_from_time.mode;
       }

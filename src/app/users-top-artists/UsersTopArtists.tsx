@@ -40,7 +40,7 @@ const UsersTopArtists: FC<UsersTopArtistsProps> = ({
   }, [user_id, setIsLoading]);
 
   return (
-    <main className="grid gap-2 bg-base-200 p-2 md:p-4 rounded-xl max-w-fit items-center shadow-md overflow-x-auto">
+    <main className="grid min-w-0 max-w-full gap-2 overflow-hidden rounded-xl bg-base-200 p-2 shadow-md md:p-4">
       <h1 className="text-3xl md:text-4xl font-semibold">
         Your Recent Top Artists
       </h1>
@@ -55,7 +55,8 @@ const UsersTopArtists: FC<UsersTopArtistsProps> = ({
           </p>
         </div>
       ) : (
-        <section className="grid grid-cols-3 gap-2 place-items-center w-max overflow-x-auto">
+        <section className="w-full min-w-0 overflow-x-auto pb-1">
+          <div className="grid w-max grid-cols-3 place-items-center gap-2">
           {usersTopArtists?.map((artist) => (
             <div
               className="flex flex-col p-2 bg-base-100 rounded-lg"
@@ -92,6 +93,7 @@ const UsersTopArtists: FC<UsersTopArtistsProps> = ({
               </div>
             </div>
           ))}
+          </div>
         </section>
       )}
     </main>
