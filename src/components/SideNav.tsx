@@ -37,13 +37,12 @@ const SideNav: FC<SideNavProps> = ({
 
       <div className="flex flex-col items-center p-4 avatar">
         <div className="w-24 rounded-full">
-          <Image
-            src={user.image300 ? user.image300 : "https://picsum.photos/64"}
-            alt="profile picture"
-            width={160}
-            height={160}
-            quality={90}
-          />
+            <Image
+              src={user.image300 ? user.image300 : "https://picsum.photos/64"}
+              alt="profile picture"
+              width={160}
+              height={160}
+            />
         </div>
         <h2 className="btn btn-ghost mt-2 text-lg normal-case">
           <a href={user.spotify} target="_blank" rel="noreferrer noopener">

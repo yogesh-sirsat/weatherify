@@ -64,7 +64,7 @@ const UsersTopArtists: FC<UsersTopArtistsProps> = ({
               <div className="relative">
                 <Image
                   className="h-44 w-44 object-cover shadow-lg"
-                  src={artist.images[1]?.url || artist.images[0]?.url || ""}
+                  src={artist.images[1]?.url || artist.images[0]?.url || "https://picsum.photos/240"}
                   alt={artist.name}
                   width={240}
                   height={240}

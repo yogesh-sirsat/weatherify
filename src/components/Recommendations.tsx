@@ -112,7 +112,7 @@ const Recommendations: FC<RecommendationsProps> = ({
                   <div className="flex flex-row gap-2 hover:bg-opacity-60">
                     <Image
                       className="rounded-sm"
-                      src={track.album?.images?.[0]?.url || ""}
+                      src={track.album?.images?.[0]?.url || "https://picsum.photos/120"}
                       alt={track.album?.name || track.name}
                       width={120}
                       height={120}

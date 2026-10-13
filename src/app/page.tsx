@@ -102,21 +102,39 @@ const Home: FC = () => {
 
       const params: any = {
         limit: 20,
-        target_valence: audio_features.valence, // Fixed typo from 'valance'
+        target_valence: audio_features.valence,
         target_energy: audio_features.energy,
         target_tempo: audio_features.tempo,
         target_instrumentalness: audio_features.instrumentalness,
         target_danceability: audio_features.danceability,
         target_acousticness: audio_features.acousticness,
-        target_key: audio_features?.key,
         target_mode: audio_features.mode,
         max_duration_ms: 8 * 60 * 1000,
       };
 
+      if (audio_features.key !== undefined && audio_features.key >= 0) {
+        params.target_key = audio_features.key;
+      }
+
       if (selectedGenres.size > 0) {
-        params.seed_genres = Array.from(selectedGenres).join(",");
+        params.seed_genres = Array.from(selectedGenres).slice(0, 5).join(",");
       } else {
-        params.seed_artists = await getUsersTopArtistsIds(user_id, access_token);
+        const topArtists = await getUsersTopArtistsIds(user_id, access_token);
+        if (topArtists && topArtists.trim().length > 0) {
+          params.seed_artists = topArtists.split(",").slice(0, 5).join(",");
+        } else {
+          // Weather-appropriate fallback seed genres if user has no top artists or selected genres
+          const w = (weatherStatus.main || "").toLowerCase();
+          if (w.includes("rain") || w.includes("drizzle")) {
+            params.seed_genres = "chill,acoustic,indie";
+          } else if (w.includes("snow") || w.includes("mist") || w.includes("fog")) {
+            params.seed_genres = "ambient,acoustic,piano";
+          } else if (w.includes("thunder")) {
+            params.seed_genres = "rock,electronic,metal";
+          } else {
+            params.seed_genres = "pop,indie,dance";
+          }
+        }
       }
 
       const config = {
@@ -125,7 +143,7 @@ const Home: FC = () => {
       };
       
       const response = await axiosSpotify.get("recommendations", config);
-      setRecommendations(response.data.tracks);
+      setRecommendations(response.data.tracks || []);
       setIsRecommendations(true);
       
       setPlaylistBody({
@@ -149,17 +167,32 @@ const Home: FC = () => {
         headers: { Authorization: "Bearer " + access_token },
       };
       
-      const response = await axiosSpotify.post(
-        `users/${user_id}/playlists`,
-        playlistBody,
-        config
-      );
+      // Use modern POST me/playlists with fallback to legacy users/{user_id}/playlists
+      let response;
+      try {
+        response = await axiosSpotify.post("me/playlists", playlistBody, config);
+      } catch {
+        response = await axiosSpotify.post(
+          `users/${user_id}/playlists`,
+          playlistBody,
+          config
+        );
+      }
 
-      await axiosSpotify.post(
-        `playlists/${response.data.id}/tracks`,
-        { uris },
-        config
-      );
+      // Use modern POST playlists/{id}/items with fallback to legacy tracks
+      try {
+        await axiosSpotify.post(
+          `playlists/${response.data.id}/items`,
+          { uris },
+          config
+        );
+      } catch {
+        await axiosSpotify.post(
+          `playlists/${response.data.id}/tracks`,
+          { uris },
+          config
+        );
+      }
 
       setIsRecommendations(false);
       setRecommendations([]);

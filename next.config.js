@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   compiler: {
     removeConsole: process.env.NODE_ENV === "production"
   },
@@ -15,6 +16,12 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "platform-lookaside.fbsbx.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "openweathermap.org",
         port: "",
         pathname: "/**",
       },

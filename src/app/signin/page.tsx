@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, FC } from "react";
+import React, { useEffect, useState, useRef, FC } from "react";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -16,7 +16,16 @@ const SignIn: FC = () => {
   const router = useRouter();
 
   const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "";
-  const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/signin`;
+  const rawBaseUrl = (
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000"
+  ).replace(/\/+$/, "");
+  // Spotify policy requirement: localhost is forbidden. Must use 127.0.0.1 literal.
+  const baseUrl = rawBaseUrl.replace(/\/\/localhost(?::|$)/, (match) =>
+    match.replace("localhost", "127.0.0.1")
+  );
+  const redirectUri = `${baseUrl}/signin`;
   const requestScope =
     "playlist-modify-private playlist-modify-public user-read-recently-played user-top-read";
 
@@ -119,13 +128,15 @@ const SignIn: FC = () => {
     await getUserProfile(access_token, refresh_token);
   };
 
-  const requestTokens = async (code: string): Promise<void> => {
+  const hasHandledCallback = useRef(false);
+
+  const requestTokens = async (code: string): Promise<boolean> => {
     try {
       const codeVerifier = localStorage.getItem("code_verifier");
       if (!codeVerifier) {
-        console.log("Code verifier not found in local storage");
-        manageAlerts(setError, "Authorization error, signin again");
-        return;
+        console.error("Code verifier not found in localStorage");
+        manageAlerts(setError, "Authorization session expired, please sign in again");
+        return false;
       }
 
       const body = new URLSearchParams({
@@ -146,23 +157,24 @@ const SignIn: FC = () => {
         }
       );
 
-      console.log(response);
-
-      if (response.status === 200) {
+      if (response.status === 200 && response.data?.access_token) {
         const { access_token, refresh_token, expires_in, scope } =
           response.data;
-        console.log(access_token, refresh_token, expires_in, scope);
         await manageTokens(access_token, refresh_token, expires_in);
         if (requestScope !== scope) {
-          console.log("Scope mismatch");
+          console.warn("Scope mismatch:", { expected: requestScope, received: scope });
         }
+        return true;
       } else {
-        console.error(response.data.error);
-        manageAlerts(setError, "Authorization error");
+        console.error("Token error:", response.data);
+        manageAlerts(setError, "Failed to authenticate with Spotify");
+        return false;
       }
-    } catch (err) {
-      console.error(err);
-      manageAlerts(setError, "Authorization error");
+    } catch (err: any) {
+      console.error("Token exchange failed:", err?.response?.data || err);
+      const desc = err?.response?.data?.error_description || "Authorization error occurred";
+      manageAlerts(setError, desc);
+      return false;
     }
   };
 
@@ -196,28 +208,61 @@ const SignIn: FC = () => {
     search_params: URLSearchParams
   ): Promise<void> => {
     setLoading(true);
-    if (localStorage.getItem("code_state") !== search_params.get("state")) {
-      console.error("Invalid state");
-      manageAlerts(setError, "Invalid request, try again");
-    } else if (search_params.has("error")) {
-      console.error("Authorization error:", search_params.get("error"));
-      manageAlerts(setError, "Authorization error");
-    } else if (search_params.has("code")) {
-      const code = search_params.get("code");
-      if (code) {
-        await requestTokens(code);
-        return router.push("/");
+    try {
+      const stateParam = search_params.get("state");
+      const storedState = localStorage.getItem("code_state");
+
+      if (search_params.has("error")) {
+        console.error("Authorization error from Spotify:", search_params.get("error"));
+        manageAlerts(setError, "Authorization cancelled or denied");
+        setLoading(false);
+        router.replace("/signin");
+        return;
       }
-    } else {
-      manageAlerts(setError, "Unknown error occurred, try again");
+
+      if (!storedState || storedState !== stateParam) {
+        console.error("Invalid state. Stored:", storedState, "Received:", stateParam);
+        manageAlerts(setError, "Invalid session state. Please click 'Let's Create' again.");
+        setLoading(false);
+        router.replace("/signin");
+        return;
+      }
+
+      const code = search_params.get("code");
+      if (!code) {
+        manageAlerts(setError, "Missing authorization code");
+        setLoading(false);
+        router.replace("/signin");
+        return;
+      }
+
+      const success = await requestTokens(code);
+      if (success) {
+        localStorage.removeItem("code_state");
+        localStorage.removeItem("code_verifier");
+        router.push("/");
+      } else {
+        setLoading(false);
+        router.replace("/signin");
+      }
+    } catch (err) {
+      console.error("Unexpected callback error:", err);
+      manageAlerts(setError, "Sign-in error occurred, please try again");
+      setLoading(false);
+      router.replace("/signin");
     }
-    router.push("/signin");
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      window.location.href = window.location.href.replace("//localhost", "//127.0.0.1");
+      return;
+    }
+
     const search_params = new URLSearchParams(window.location.search);
-    console.log("searchParams", search_params);
-    if (search_params.has("state")) {
+    if (search_params.has("code") && search_params.has("state")) {
+      if (hasHandledCallback.current) return;
+      hasHandledCallback.current = true;
       manageSpotifyCallback(search_params);
     }
   }, []);

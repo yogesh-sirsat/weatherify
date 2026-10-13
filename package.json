@@ -6,34 +6,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@heroicons/react": "^2.0.18",
     "autoprefixer": "10.4.15",
-    "axios": "^1.5.0",
-    "daisyui": "^3.9.2",
-    "eslint": "8.49.0",
-    "eslint-config-next": "13.4.19",
+    "axios": "^1.7.9",
+    "daisyui": "^3.9.4",
     "js-cookie": "^3.0.5",
-    "mongodb": "^6.1.0",
+    "mongodb": "^6.12.0",
     "next": "^16.2.6",
     "postcss": "^8.4.31",
-    "postcss-nesting": "^12.0.1",
+    "postcss-nesting": "^12.1.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "sharp": "^0.32.6",
+    "sharp": "^0.33.5",
     "tailwindcss": "3.3.3",
     "theme-change": "^2.5.0",
-    "uuid": "^9.0.1",
-    "weatherify": "file:"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
-    "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.35",
+    "typescript": "^5.7.2"
   }
 }
