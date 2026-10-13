@@ -8,6 +8,7 @@ import axiosConfig from "@/config/axiosConfig";
 import Cookies from "js-cookie";
 import LoadingScreen from "@/components/LoadingScreen";
 import manageAlerts from "@/utils/manageAlerts";
+import StitchLanding from "@/components/StitchLanding";
 
 const SignIn: FC = () => {
   const [error, setError] = useState<string | null>(null);
@@ -270,9 +271,9 @@ const SignIn: FC = () => {
   return (
     <>
       {loading ? <LoadingScreen /> : null}
-      <main className="container mx-auto relative">
-        {error ? (
-          <div className="bg-error flex flex-row gap-2 rounded-2xl absolute p-6 top-0 inset-x-0 m-8">
+      {error ? (
+        <div className="fixed top-24 inset-x-0 mx-auto max-w-lg z-50 p-4">
+          <div className="bg-error text-error-content flex flex-row gap-2 rounded-2xl p-4 shadow-xl items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="stroke-current shrink-0 h-6 w-6"
@@ -286,25 +287,11 @@ const SignIn: FC = () => {
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>{error}</span>
+            <span className="font-medium text-sm">{error}</span>
           </div>
-        ) : null}
-        <section className="flex flex-row min-h-screen justify-start items-center p-4">
-          <div className="max-w-lg md:max-w-2xl">
-            <h1 className="text-5xl md:text-9xl font-bold">Weatherify</h1>
-            <p className="py-6">
-              Create personalized playlists in your Spotify, that sync with your
-              current time of day, weather, and recent taste. Explore the magic of
-              music and weather coming together for a unique listening
-              experience.
-            </p>
-            <button className="btn btn-primary" onClick={handleGetStarted}>
-              Let&apos;s Create
-            </button>
-          </div>
-        </section>
-      </main>
-      <Footer />
+        </div>
+      ) : null}
+      <StitchLanding onConnectSpotify={handleGetStarted} />
     </>
   );
 };

@@ -7,9 +7,31 @@ export interface AudioFeatures {
   acousticness: number;
   key: number;
   mode: number;
+  liveness?: number;
+  loudness?: number;
+  speechiness?: number;
+  popularity?: number;
+  duration_ms?: number;
+  time_signature?: number;
 }
 
 export type RecommendationPriority = "Balanced" | "Weather" | "Time";
+
+export interface PlaylistSettings {
+  name: string;
+  description: string;
+  isPublic: boolean;
+  coverFile?: File | null;
+}
+
+export interface CustomAudioFeatures extends AudioFeatures {
+  liveness: number;
+  loudness: number;
+  speechiness: number;
+  popularity: number;
+  duration_ms: number;
+  time_signature: number;
+}
 
 export interface SpotifyRecommendationParams {
   limit?: number;
@@ -24,6 +46,12 @@ export interface SpotifyRecommendationParams {
   target_acousticness?: number;
   target_key?: number;
   target_mode?: number;
+  target_liveness?: number;
+  target_loudness?: number;
+  target_speechiness?: number;
+  target_popularity?: number;
+  target_duration_ms?: number;
+  target_time_signature?: number;
   max_duration_ms?: number;
 }
 
