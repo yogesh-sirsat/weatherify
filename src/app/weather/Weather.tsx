@@ -35,7 +35,52 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
 
   const cityModal = useRef<HTMLDialogElement>(null);
 
-  // Debounce city suggestions query as user types
+  // Prettify address into a clean, compact label (e.g. "Kothrud, Pune" or "SoHo, New York")
+  const formatPrettyAddress = (
+    item: any
+  ): { title: string; subtitle: string; shortLabel: string } => {
+    const addr = item.address || {};
+    const primary =
+      addr.residential ||
+      addr.suburb ||
+      addr.neighbourhood ||
+      addr.road ||
+      item.name ||
+      "";
+    const city =
+      addr.city ||
+      addr.town ||
+      addr.village ||
+      addr.municipality ||
+      addr.county ||
+      "";
+    const state = addr.state || "";
+    const country = addr.country || "";
+    const countryCode = (addr.country_code || "").toUpperCase();
+
+    // Compact title for the dashboard (e.g., "Kothrud, Pune" or "Chelsea, New York")
+    let shortLabel = primary;
+    if (city && city.toLowerCase() !== primary.toLowerCase()) {
+      shortLabel = primary ? `${primary}, ${city}` : city;
+    } else if (state && state.toLowerCase() !== primary.toLowerCase()) {
+      shortLabel = primary ? `${primary}, ${state}` : state;
+    } else if (!shortLabel) {
+      shortLabel = item.name || "Unknown Location";
+    }
+
+    const subtitleParts = [city, state, country].filter(
+      (part) => part && part.toLowerCase() !== primary.toLowerCase()
+    );
+    const subtitle = Array.from(new Set(subtitleParts)).join(", ");
+
+    return {
+      title: primary || item.name,
+      subtitle,
+      shortLabel,
+    };
+  };
+
+  // Debounce location/address suggestions query as user types using Nominatim (OpenStreetMap)
   useEffect(() => {
     const trimmed = cityInput.trim();
     if (!trimmed || trimmed.length < 2) {
@@ -47,24 +92,52 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
     const timer = setTimeout(async () => {
       setIsSearchingCity(true);
       try {
-        const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-        const res = await axios.get<CitySuggestion[]>(
-          `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+        const res = await axios.get<any[]>(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
             trimmed
-          )}&limit=5&appid=${apiKey}`
+          )}&format=json&addressdetails=1&limit=6`,
+          {
+            headers: {
+              "Accept-Language": "en",
+            },
+          }
         );
-        if (Array.isArray(res.data)) {
-          setCitySuggestions(res.data);
+
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          const formatted: CitySuggestion[] = res.data.map((item) => {
+            const { title, subtitle, shortLabel } = formatPrettyAddress(item);
+            return {
+              name: shortLabel,
+              displayName: title,
+              subtitle: subtitle,
+              lat: parseFloat(item.lat),
+              lon: parseFloat(item.lon),
+              country: (item.address?.country_code || item.address?.country || "").toUpperCase(),
+              state: item.address?.state,
+            };
+          });
+          setCitySuggestions(formatted);
         } else {
-          setCitySuggestions([]);
+          // Fallback to OpenWeather direct geocoder if OSM yields no results
+          const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+          const fallbackRes = await axios.get<any[]>(
+            `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+              trimmed
+            )}&limit=5&appid=${apiKey}`
+          );
+          if (Array.isArray(fallbackRes.data)) {
+            setCitySuggestions(fallbackRes.data);
+          } else {
+            setCitySuggestions([]);
+          }
         }
       } catch (err) {
-        console.error("Error fetching city suggestions:", err);
+        console.error("Error fetching location suggestions:", err);
         setCitySuggestions([]);
       } finally {
         setIsSearchingCity(false);
       }
-    }, 300);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [cityInput]);
@@ -80,7 +153,8 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
 
   const fetchWeatherData = async (
     coordinates: CoordinatesInput | null,
-    city?: string
+    city?: string,
+    customLabel?: string
   ) => {
     setError("");
     setModalError(null);
@@ -89,7 +163,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
     let query: string;
 
     const retrieveCache = (key: string) => {
-      if (weatherData && weatherData.city.toLowerCase() === city?.toLowerCase()) {
+      if (weatherData && weatherData.city.toLowerCase() === (customLabel || city)?.toLowerCase()) {
         managePostWeatherDataChange(weatherData.weather.main);
         return true;
       }
@@ -97,6 +171,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
       if (cached) {
         try {
           const data: WeatherData = JSON.parse(cached);
+          if (customLabel) data.city = customLabel;
           managePostWeatherDataChange(data.weather.main);
           setWeatherStatusData(data);
           return true;
@@ -130,7 +205,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
         main: response.data.main,
         sys: response.data.sys,
         timezone: response.data.timezone,
-        city: response.data.name,
+        city: customLabel || response.data.name,
         cod: response.data.cod,
       };
 
@@ -327,6 +402,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
   const handleSelectSuggestion = (suggestion: CitySuggestion) => {
     fetchWeatherData(
       { latitude: suggestion.lat, longitude: suggestion.lon },
+      suggestion.name,
       suggestion.name
     );
     setCityInput("");
@@ -391,11 +467,18 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
                 </div>
               </div>
             </div>
-            <div className="stat-title">
-              {weatherData?.city}, {weatherData?.sys.country}{" "}
+            <div className="stat-title max-w-xs truncate">
+              <span className="font-medium text-base-content" title={weatherData?.city}>
+                {weatherData?.city}
+              </span>
+              {weatherData?.sys?.country ? (
+                <span className="text-xs opacity-70 ml-1">
+                  ({weatherData.sys.country})
+                </span>
+              ) : null}{" "}
               <span>
                 <button
-                  className="badge badge-xs py-2 badge-outline hover:badge-ghost"
+                  className="badge badge-xs py-2 badge-outline hover:badge-ghost ml-1"
                   onClick={() => cityModal.current?.showModal()}
                 >
                   Change
@@ -451,9 +534,9 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
               ✕
             </button>
           </form>
-          <h3 className="font-bold text-lg">Set Location Manually</h3>
-          <p className="p-3 mt-2 text-xs md:text-sm bg-info/20 text-info-content border border-info/30 rounded-xl">
-            Type your city name to see instant location suggestions with coordinates.
+          <h3 className="font-bold text-lg">Set Exact Location</h3>
+          <p className="p-4 mt-2 text-sm bg-info rounded-xl italic text-gray-900">
+            Search your neighborhood, area, street, or city for hyper-local weather.
           </p>
           {modalError && (
             <div className="bg-error text-error-content flex flex-row gap-2 mt-2 rounded-lg p-2 text-sm items-center">
@@ -476,7 +559,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
           )}
           <div className="form-control w-full mt-3">
             <label className="label py-1">
-              <span className="label-text font-medium">Search City</span>
+              <span className="label-text font-medium">Search Area / Address</span>
               {isSearchingCity && (
                 <span className="label-text-alt flex items-center gap-1 text-primary">
                   <span className="loading loading-spinner loading-xs"></span>{" "}
@@ -487,7 +570,7 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
             <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. London, Tokyo, New York"
+                placeholder="e.g. Kothrud, SoHo, Baker Street, Shibuya"
                 className="input input-bordered input-sm md:input-md w-full"
                 value={cityInput}
                 onChange={(e) => setCityInput(e.target.value)}
@@ -502,19 +585,19 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
 
             {/* Suggestions dropdown */}
             {citySuggestions.length > 0 && (
-              <div className="mt-2 border border-base-300 rounded-xl overflow-hidden shadow-lg bg-base-100 max-h-52 overflow-y-auto">
-                <ul className="menu p-1 w-full">
+              <div className="mt-2 border border-base-300 rounded-xl overflow-hidden shadow-lg bg-base-100 max-h-56 overflow-y-auto">
+                <ul className="menu p-1 w-full gap-1">
                   {citySuggestions.map((item, idx) => (
                     <li key={`${item.lat}-${item.lon}-${idx}`}>
                       <button
                         type="button"
-                        className="flex items-center justify-between py-2 px-3 hover:bg-primary hover:text-primary-content transition-colors rounded-lg text-left"
+                        className="flex items-start justify-between py-2 px-3 hover:bg-primary hover:text-primary-content transition-colors rounded-lg text-left"
                         onClick={() => handleSelectSuggestion(item)}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-start gap-2 min-w-0 flex-1">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 shrink-0 text-accent"
+                            className="h-4 w-4 shrink-0 text-accent mt-0.5"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -532,16 +615,18 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
                               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
-                          <div className="truncate">
-                            <span className="font-semibold">{item.name}</span>
-                            {item.state ? (
-                              <span className="opacity-75 text-xs">
-                                , {item.state}
-                              </span>
+                          <div className="min-w-0 pr-1">
+                            <div className="font-semibold text-sm truncate">
+                              {item.displayName || item.name}
+                            </div>
+                            {item.subtitle ? (
+                              <div className="text-xs opacity-75 truncate max-w-[240px]">
+                                {item.subtitle}
+                              </div>
                             ) : null}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        <div className="flex items-center gap-1 shrink-0 ml-2 pt-0.5">
                           <span className="badge badge-sm badge-outline font-mono">
                             {item.country}
                           </span>
@@ -556,8 +641,8 @@ const Weather: FC<WeatherProps> = ({ setWeatherStatus, weatherStatus, setError }
               !isSearchingCity &&
               citySuggestions.length === 0 && (
                 <div className="text-xs text-base-content/60 mt-2 px-1">
-                  No matching cities found. You can click Submit to search by
-                  city name.
+                  No matching locations found. You can click Submit to search by
+                  name.
                 </div>
               )}
           </div>

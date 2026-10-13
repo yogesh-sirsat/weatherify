@@ -51,4 +51,6 @@ export interface CitySuggestion {
   lon: number;
   country: string;
   state?: string;
+  displayName?: string;
+  subtitle?: string;
 }
