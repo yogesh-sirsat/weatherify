@@ -1,21 +1,83 @@
-## Weatherify
+# Weatherify
 
-#### Introduction:
- Weatherify is a unique music recommendation platform that harnesses the power of weather data, time of day, and user preferences to curate personalized Spotify playlists. By integrating weather conditions, Circadian Rhythms, and music analysis, Weatherify offers users an immersive and mood-enhancing listening experience.
+Weatherify creates Spotify recommendation playlists from the signals around you. It combines live weather, time of day, listening taste, moods, activities, genres, and Spotify audio-feature targets into playlists that can be reviewed and exported to Spotify.
 
-#### Key Features:
-##### Weather-Based Playlists: 
-Weatherify generates Spotify playlists based on real-time weather data from the user's location. Different weather conditions are associated with specific moods and music selections.
-##### Circadian Rhythm Integration: 
-Weatherify synchronizes music recommendations with the user's Circadian Rhythm, considering their natural energy levels throughout the day.
-##### Mixing Taste Based On Recent Browse and Listening History.
-##### Genre Based Filtering(more to come).
+## Features
 
-### How to use:
-Log in with spotify so system can fetch your listening history and create playlists on your account. For better accuracy allow website your location access or you can just enter your city manually, after that system will fetch your live weather conditions and local time,
-website is providing you filtering options like whether  you want recommendations more towards your local time or weather or balanced between this two, and genres(if you are filtering with genre then recommendtions will not consider your spotify listening history.)
-And now when you click on create recommendations your will see window pop-up from right side with generated recommendations, before clicking on create playlist from it, you can listen them with spotify direct link and also remove some tracks from it. Now once you finalized with tracks you can click on create playlist and tada!! you can see new playlist in your spotify library, listen and enjoy it, after that you can let me know whether you liked it or it needs some improvements.
+### Weather x Time
+
+- Reads current weather and local time from the weather view.
+- Balances weather and time, or gives one signal more influence.
+- Supports up to five Spotify genre seeds.
+- Uses recent top artists when no genres or new-music discovery mode is selected.
+- Lets you choose the number of tracks to generate, from 5 to 100.
+
+### Mood x Activity
+
+- Choose a mood, an activity, or combine both.
+- Available moods include Happy, Calm, Focused, Melancholy, Confident, and Romantic.
+- Available activities include Workout, Study, Commute, Cooking, Party, and Sleep & unwind.
+- Choose whether mood, activity, or a balanced blend has more influence.
+- Supports genre seeds, new-music discovery, and track-count controls.
+
+### User x Custom
+
+- Adjust Spotify recommendation targets with sliders.
+- Controls include danceability, energy, valence, acousticness, instrumentalness, liveness, speechiness, tempo, loudness, popularity, duration, time signature, key, and mode.
+- Normalized Spotify values are presented as percentages where appropriate.
+- Import and customize Balanced, Weather, Time, Mood, and Activity presets.
+- Any edited preset is labeled Custom for the current session.
+- Each parameter has an information button with plain-language guidance.
+
+### Recommendation review
+
+- Preview available track clips with one shared player.
+- Only one preview can play at a time.
+- Preview playback stops when the recommendation drawer closes or its list changes.
+- Remove tracks before creating the playlist.
+- Refresh recommendations or add a chosen number of tracks with a maximum list size of 100.
+- Open track links with `Play on Spotify` attribution.
+
+### Playlist creation and themes
+
+- Configure playlist name, description, cover image, and visibility before creation.
+- Export the reviewed track list to the user's Spotify account.
+- Choose from eight DaisyUI themes using the theme menu.
+- Theme previews and application UI use theme-aware DaisyUI color tokens.
+- The Recent Top Artists card strip is horizontally scrollable on small screens without moving its heading.
+
+## How to use
+
+1. Sign in with Spotify.
+2. Allow location access or search for a city to load weather and local time.
+3. Choose Weather x Time, Mood x Activity, or User x Custom.
+4. Select genres, presets, audio targets, and the number of tracks as needed.
+5. Generate recommendations and review the drawer.
+6. Preview available clips, remove unwanted tracks, refresh, or add more tracks.
+7. Create the playlist and customize its Spotify settings in the modal.
+
+When genres are selected, Spotify receives genre seeds instead of recent top-artist seeds. This can broaden discovery, but Spotify does not guarantee that every result will be unfamiliar. The new-music option uses genre seeds when no genres are selected.
+
+## Development
+
+Install dependencies and start the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+Useful checks:
+
+```bash
+npx tsc --noEmit
+npm run build
+```
+
+## Technology
+
+Next.js, React, TypeScript, Spotify Web API, OpenWeatherMap, Tailwind CSS, DaisyUI, MongoDB, Docker, AWS EC2/ECR, and Nginx.
+
+## Screenshots
 
 [Screenshots](https://1drv.ms/f/s!AljPuC-a7vuNqgoBUHdOIqGvCTNM?e=yxprZO)
-
-*Used Tech:* NextJs, ReactJs, MongoDB, Docker, AWS(EC2, ECR), TailwindCSS, Nginx
